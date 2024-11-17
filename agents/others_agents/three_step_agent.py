@@ -61,12 +61,6 @@ class three_step_Agent(Agent):
 
 
 
-
-
-
-    print("My AI's turn took ", time_taken, "seconds.")
-
-
     if (move == None) :
       print('smt went wrong and min_max didnt return :( giving random move...')
       move = random_move(chess_board,player)
