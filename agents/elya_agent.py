@@ -5,6 +5,7 @@ import copy
 import random
 import numpy as np
 
+
 @register_agent("elya_agent")
 class ElyaAgent(Agent):
 
