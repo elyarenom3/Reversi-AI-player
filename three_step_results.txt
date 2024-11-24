@@ -1,0 +1,28 @@
+Test: ThreeStepAgent vs random_agent on 6x6 board:
+================================================================================
+Test: ThreeStepAgent vs random_agent on 7x7 board:
+================================================================================
+Test: ThreeStepAgent vs random_agent on 8x8 board:
+================================================================================
+Test: ThreeStepAgent vs random_agent on 9x9 board:
+================================================================================
+Test: ThreeStepAgent vs random_agent on 10x10 board:
+================================================================================
+Test: ThreeStepAgent vs random_agent on 11x11 board:
+================================================================================
+Test: ThreeStepAgent vs random_agent on 12x12 board:
+================================================================================
+Test: ThreeStepAgent vs gpt_greedy_corners_agent on 6x6 board:
+================================================================================
+Test: ThreeStepAgent vs gpt_greedy_corners_agent on 7x7 board:
+================================================================================
+Test: ThreeStepAgent vs gpt_greedy_corners_agent on 8x8 board:
+================================================================================
+Test: ThreeStepAgent vs gpt_greedy_corners_agent on 9x9 board:
+================================================================================
+Test: ThreeStepAgent vs gpt_greedy_corners_agent on 10x10 board:
+================================================================================
+Test: ThreeStepAgent vs gpt_greedy_corners_agent on 11x11 board:
+================================================================================
+Test: ThreeStepAgent vs gpt_greedy_corners_agent on 12x12 board:
+================================================================================
