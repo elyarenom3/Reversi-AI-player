@@ -9,7 +9,7 @@ import time
 class TimeoutException(Exception):
     pass
 
-@register_agent("opp1")
+@register_agent("opp1_agent")
 class Opp1Agent(Agent):
     """
     A custom agent for playing Reversi/Othello using Alpha-Beta Pruning with depth-limited iterative deepening.
@@ -17,7 +17,7 @@ class Opp1Agent(Agent):
 
     def __init__(self):
         super(Opp1Agent, self).__init__()
-        self.name = "opp1"
+        self.name = "opp1_agent"
         self.time_limit = 1.99  # Max 2 seconds per turn for the search
 
     def step(self, chess_board, player, opponent):

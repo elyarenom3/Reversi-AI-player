@@ -23,203 +23,115 @@ class agent_mcts(Agent):
     super(agent_mcts, self).__init__()
     self.name = "agent_mcts"
 
-    # add parameters that agent learns here
-    self.state_tree = []
+    def step(self, chess_board, player, opponent):
+        """
+        Decide the next move using MCTS.
+        """
+        def get_base_move_scores(board, player, moves):
+            scores = np.zeros(len(moves))
+            for i, move in enumerate(moves):
+                simulated_board = deepcopy(board)
+                execute_move(simulated_board, move, player)
+                _, player_score, opp_score = check_endgame(simulated_board, player, opponent)
+                scores[i] = player_score - opp_score
+            return scores
 
-    # reuse info across various searches
+        def swap_players(current, other):
+            return other, current
 
-  def step(self, chess_board, player, opponent):
-    """
-    Implement the step function of your agent here.
-    You can use the following variables to access the chess board:
-    - chess_board: a numpy array of shape (board_size, board_size)
-      where 0 represents an empty spot, 1 represents Player 1's discs (Blue),
-      and 2 represents Player 2's discs (Brown).
-    - player: 1 if this agent is playing as Player 1 (Blue), or 2 if playing as Player 2 (Brown).
-    - opponent: 1 if the opponent is Player 1 (Blue), or 2 if the opponent is Player 2 (Brown).
+        def simulate_to_end(board, p, q):
+            """
+            Simulate the game to completion using random moves for both players.
+            """
+            is_endgame, p_score, opp_score = check_endgame(board, player, opponent)
+            while not is_endgame:
+                move = random_move(board, p)
+                if move is None:
+                    p, q = swap_players(p, q)
+                    move = random_move(board, p)
+                execute_move(board, move, p)
+                p, q = swap_players(p, q)
+                is_endgame, p_score, opp_score = check_endgame(board, player, opponent)
+            return p_score - opp_score
 
-    You should return a tuple (r,c), where (r,c) is the position where your agent
-    wants to place the next disc. Use functions in helpers to determine valid moves
-    and more helpful tools.
+        def compute_move_scores(exploit, explore, n_parent, exploration_factor):
+            return exploit + exploration_factor * np.sqrt(n_parent / (1 + explore))
 
-    Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
-    """
+        # Timing setup
+        start_time = time.time()
 
-    """
-    IDEAS:
+        # Hyperparameters
+        exploration_factor = 1.4  # Exploration parameter for UCT
+        max_simulation_time = 1.99  # Maximum time for simulations
 
-      - MTCS: Tree policy: Sim Policy:
-      - Simulated Annealing: 
+        # Get valid moves
+        possible_moves = get_valid_moves(chess_board, player)
+        if len(possible_moves) == 1:
+            return possible_moves[0]
 
-      - Greedy?
-      - GPT_greedy_corner works with score and combines multiple methods. 
-      
+        # Initialize MCTS tree
+        tree_states = [(chess_board, player)]  # (board_state, current_player)
+        node_moves = [possible_moves]
+        exploit = [get_base_move_scores(chess_board, player, possible_moves)]
+        explore = [np.ones(len(possible_moves))]  # Exploration count
+        node_visits = [1]
 
-    """
-    def get_base_move_scores(chess_board,player,moves):
+        while time.time() - start_time < max_simulation_time:
+            simulated_board = deepcopy(chess_board)
+            current_player, other_player = player, opponent
+            depth = 0
+            path_indices = []  # Path of nodes explored
+            move_indices = []  # Path of moves taken
 
-      scores = np.zeros(len(moves))
-      
-      for i in range(len(moves)):
-        # executes move
-        CB = np.copy(chess_board)
-        execute_move(CB,moves[i],player)
-        _, player_score, opp_score = check_endgame(CB,player,opponent)
-        # evaluates move initial score
-        scores[i] = player_score - opp_score
-        
-      return scores
-        
-    def count_empty_spaces(chess_board):
-      return np.sum(np.equal(chess_board,0))
+            # Selection phase: Traverse the tree
+            while True:
+                # Find node index in the tree
+                try:
+                    node_index = next(
+                        i for i, (state, pl) in enumerate(tree_states)
+                        if np.array_equal(state, simulated_board) and pl == current_player
+                    )
+                except StopIteration:
+                    node_index = -1
 
-    def swap_players(p,opp):
-      if p == player:
-        p = opponent
-        opp = player
-      else:
-        p = player
-        opp = opponent
-      return p, opp
-        
-    def get_loc_in_tree(state_tree,s,p):
-      N = len(state_tree)
-      for i in range(N-1,-1,-1):
-        state,play = state_tree[i]
-        if play==p and np.array_equal(s,state):
-          return i
-      return -1
+                if node_index == -1:
+                    break  # Node not found, expand it
 
-    def simulate_to_end(chess_board,p,q):
-      # simulates to end using random moves for both agents
-      is_endgame, p_score, opp_score = check_endgame(chess_board,player,opponent)
-      while not is_endgame:
-        # picks random move
-        move = random_move(chess_board,p)
-        if move is None:
-          p,q = swap_players(p,q)
-          move = random_move(chess_board,p)
-        execute_move(chess_board,move,p)
-        p,q = swap_players(p,q)
-        # checks for endgame
-        is_endgame, p_score, opp_score = check_endgame(chess_board,player,opponent)
-      return p_score-opp_score     
-    
-    def compute_move_scores(exploit,explore,n_prev,q,k):
-      return q*exploit + k*np.sqrt(n_prev/explore)
+                # Get scores and pick the best move
+                scores = compute_move_scores(
+                    exploit[node_index], explore[node_index], node_visits[node_index], exploration_factor
+                )
+                move_index = np.argmax(scores)
+                move = node_moves[node_index][move_index]
+                if move is not None:
+                    execute_move(simulated_board, move, current_player)
 
-    # Some simple code to help you with timing. Consider checking 
-    # time_taken during your search and breaking with the best answer
-    # so far when it nears 2 seconds.
-    start_time = time.time()
-    
-    # Step 0: Setting hyperparams according to grid config
-    num_spaces = chess_board.shape[0]**2
-    q_base = 0.01 # for UCT
-    k_base = 100 # hyperparam for UCT 
+                # Record traversal path
+                path_indices.append(node_index)
+                move_indices.append(move_index)
 
-    # Step 1: gets list of possible moves
-    POSSIBLE_MOVES = get_valid_moves(chess_board,player)
-    if len(POSSIBLE_MOVES) == 1:
-      return POSSIBLE_MOVES[0]
-    num_sim = 0
+                # Swap players
+                current_player, other_player = swap_players(current_player, other_player)
+                depth += 1
 
-    # Step 2: searches tree
-    tree_states = [(chess_board,player)] # saved as (board_state,parent_ind) pairs
-    node_moves = [POSSIBLE_MOVES]
-    exploit = [get_base_move_scores(chess_board,player,POSSIBLE_MOVES)]
-    explore = [np.ones(len(POSSIBLE_MOVES))] # num explorations
-    node_scores = [1] # num node visits
-    
-    search_over = False
+            # Expansion phase: Add a new node to the tree
+            valid_moves = get_valid_moves(simulated_board, current_player)
+            if valid_moves:
+                tree_states.append((simulated_board, current_player))
+                exploit.append(get_base_move_scores(simulated_board, current_player, valid_moves))
+                explore.append(np.ones(len(valid_moves)))
+                node_moves.append(valid_moves)
+                node_visits.append(1)
 
-    while time.time() - start_time < 1.99 and not search_over:
-      
-      s = np.copy(chess_board)
-      p = player
-      q = opponent
-      depth = 0
-      prev_node_score = 1
-      
-      node_inds = [] # backpointer to all prev explored nodes
-      move_inds = [] # backpoitner to all executed moves
-      
-      while True:
-        # checks if node has been visited
-        ind = get_loc_in_tree(tree_states,s,p)
-        if ind == -1:
-          break
-        
-        # retrieves possible moves
-        num_empty = count_empty_spaces(chess_board)
-        empty_ratio = num_empty / num_spaces
-        Q = q_base #* (1 - empty_ratio)
-        K = k_base * empty_ratio
-        
-        cur_scores = compute_move_scores(exploit[ind],explore[ind],prev_node_score,Q,K)
-        print(f"Exploit is {exploit[ind]} and explore is {explore[ind]}")
-        print(f"Cur scores are {cur_scores}\n")
+            # Simulation phase: Play randomly to the end
+            result = simulate_to_end(deepcopy(simulated_board), current_player, other_player)
 
-          
-        # stores backpointers as lists
-        depth += 1
-        node_inds.append(ind)
-        move_ind = np.argmax(cur_scores)
-        move_inds.append(move_ind)
-        
-        # checks if move isn't empty
-        move = node_moves[ind][move_ind]
-        if move is not None:
-          execute_move(s,move,p)
-        
-        # swaps player every node
-        p,q = swap_players(p,q)
-        prev_node_score = node_scores[ind]
+            # Backpropagation phase: Update tree with simulation results
+            for idx, move_idx in zip(reversed(path_indices), reversed(move_indices)):
+                node_visits[idx] += 1
+                explore[idx][move_idx] += 1
+                exploit[idx][move_idx] += result
 
-      # check endgame first
-      is_endgame, p_score, opp_score = check_endgame(chess_board,player,opponent)
-
-      # if found node not in tree > add it
-      if not is_endgame:
-        tree_states.append((s,p)) # adds node to search tree
-        new_moves = get_valid_moves(s,p) # retrieves new moves
-        sim_score =  simulate_to_end(chess_board,p,q) # runs simulation
-      
-        # if moves left >> continues normally
-        if len(new_moves) != 0:
-          
-          node_moves.append(new_moves)
-          exploit.append(get_base_move_scores(s,p,new_moves))
-          explore.append(np.ones(len(new_moves)))
-          node_scores.append(1) 
-          
-        # if no moves left >> uses heuristics
-        else:
-          node_moves.append([None])
-          exploit.append(np.zeros(1))
-          explore.append(np.ones(1))
-          node_scores.append(1)
-            
-          if p == player:
-            sim_score += -1 # player runs out of moves == BAD SIGN
-          else:
-            sim_score += 1 # if opp runs out of moves == GOOD SIGN
-              #search_over = True
-      
-      # case where endgame reached
-      else:
-        sim_score = p_score - opp_score
-        
-      # backpropagate results
-      for d in range(depth): 
-        ind = node_inds[depth-1-d]              # retrieves prev node explored in path
-        node_scores[ind] += 1                   # updates node score by 1
-        move_ind = move_inds[depth-1-d]         # retrieves move index in list
-        explore[ind][move_ind] += 1             # explore score increases by 1
-        exploit[ind][move_ind] += sim_score * (1-empty_ratio)     # exploits score increases by win magnitude
-
-      num_sim += 1
-    
-    print(f"Agent ran {num_sim} simulations.")
-    best_move = np.argmax(exploit[0]) # final decision? only exploit or also explore?
-    return POSSIBLE_MOVES[best_move]
+        # Choose the best move based on exploitation scores
+        best_move_index = np.argmax(exploit[0])
+        return possible_moves[best_move_index]

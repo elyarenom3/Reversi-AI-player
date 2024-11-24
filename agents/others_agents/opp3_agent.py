@@ -6,7 +6,7 @@ from copy import deepcopy
 import time
 from helpers import random_move, count_capture, execute_move, check_endgame, get_valid_moves
 
-@register_agent("opp3")
+@register_agent("opp3_agent")
 class Opp3Agent(Agent):
     """
     A custom agent for playing Reversi/Othello with advanced heuristics.
@@ -14,7 +14,7 @@ class Opp3Agent(Agent):
 
     def __init__(self):
         super(Opp3Agent, self).__init__()
-        self.name = "opp3"
+        self.name = "opp3_agent"
 
         # Potential weights for each heuristic component
         self.weights = {

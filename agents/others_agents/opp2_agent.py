@@ -6,7 +6,7 @@ import numpy as np
 import time
 
 
-@register_agent("opp2")
+@register_agent("opp2_agent")
 class Opp2Agent(Agent):
     """
     A custom agent for playing Reversi/Othello using Alpha-Beta Pruning with advanced heuristics.
@@ -14,7 +14,7 @@ class Opp2Agent(Agent):
 
     def __init__(self):
         super(Opp2Agent, self).__init__()
-        self.name = "opp2"
+        self.name = "opp2_agent"
 
     def step(self, chess_board, player, opponent):
         """
