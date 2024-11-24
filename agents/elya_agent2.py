@@ -126,7 +126,7 @@ class ElyaAgent2(Agent):
         opponent_score = np.sum(board == opponent)
         mobility = len(get_valid_moves(board, player)) - len(get_valid_moves(board, opponent))
         corners = [(0, 0), (0, len(board) - 1), (len(board) - 1, 0), (len(board) - 1, len(board) - 1)]
-        corner_score = sum((board[x, y] == player) - (board[x, y] == opponent) for x, y in corners)
+        corner_score = sum(int(board[x, y] == player) - int(board[x, y] == opponent) for x, y in corners)
 
         return 2 * (player_score - opponent_score) + 3 * mobility + 5 * corner_score
 
