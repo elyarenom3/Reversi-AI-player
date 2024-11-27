@@ -1,103 +1,165 @@
 from agents.agent import Agent
 from store import register_agent
 from helpers import random_move, count_capture, execute_move, check_endgame, get_valid_moves
-import sys
 import numpy as np
-from copy import deepcopy
 import time
 
-@register_agent("james_agent")
-class JamesAgent(Agent):
-    """
-    A class for your implementation. Feel free to use this class to
-    add any helper functionalities needed for your agent.
-    """
 
+@register_agent("james_agent")
+class StudentAgent(Agent):
     def __init__(self):
-        super(JamesAgent, self).__init__()
+        super(StudentAgent, self).__init__()
         self.name = "JamesAgent"
+        self.transposition_table = {}  # Hash map for storing game states
+        self.max_table_size = 90320
+        """
+        heuristic approach to dynamically determine the size of 
+        the transposition table based on the board size
+
+        max table size should be board_size^4 * 10 (heuristic)
+        but since i cant figure it out, 
+            6: 12960  max entries
+            8: 40960
+            10: 100000
+            12: 207360  max entries: 
+
+            avg ~= 90320
+        """
 
     def step(self, chess_board, player, opponent):
         """
-        Implement the step function of your agent here.
-        You can use the following variables to access the chess board:
-        - chess_board: a numpy array of shape (board_size, board_size)
-          where 0 represents an empty spot, 1 represents Player 1's discs (Blue),
-          and 2 represents Player 2's discs (Brown).
-        - player: 1 if this agent is playing as Player 1 (Blue), or 2 if playing as Player 2 (Brown).
-        - opponent: 1 if the opponent is Player 1 (Blue), or 2 if the opponent is Player 2 (Brown).
-
-        Returns:
-        - Tuple (r, c): The position (row, col) where the agent places its next disc.
+        Decide the next move using iterative deepening and alpha-beta pruning.
         """
-
         start_time = time.time()
+        time_limit = 1.99
+        best_move = None
+        depth = 1
+        
 
-        # Simulated annealing parameters
-        initial_temp = 100
-        alpha = 0.95
-        min_temp = 1
+        while True:
+            try:
+                best_move = self.minimax(chess_board, player, opponent, start_time, time_limit, depth)
+                depth += 1
+            except TimeoutError:
+                break
 
-        # Simulated annealing logic
-        def heuristic(chess_board, player):
-            """
-            Heuristic function to evaluate the board state.
-            Higher scores indicate better states for the player.
-            """
-            # Number of discs owned
-            player_discs = np.sum(chess_board == player)
-            opponent_discs = np.sum(chess_board == (3 - player))
+        if best_move is None:
+            best_move = random_move(chess_board, player)
 
-            # Corner positions are advantageous
-            corners = [(0, 0), (0, chess_board.shape[1] - 1),
-                       (chess_board.shape[0] - 1, 0), (chess_board.shape[0] - 1, chess_board.shape[1] - 1)]
-            corner_score = sum(5 if chess_board[x, y] == player else -5 if chess_board[x, y] == (3 - player) else 0 for x, y in corners)
+        return best_move
 
-            # Total heuristic score
-            return player_discs - opponent_discs + corner_score
+    def minimax(self, chess_board, player, opponent, start_time, time_limit, max_depth):
+        """
+        Perform iterative deepening search with alpha-beta pruning and state memorization.
+        """
+        board_hash = hash(chess_board.tobytes())
+        if board_hash in self.transposition_table:
+            cached_state = self.transposition_table[board_hash]
+            if cached_state["depth"] >= max_depth:
+                return cached_state["best_move"]
 
-        def simulated_annealing(chess_board, player, initial_temp, alpha, min_temp):
-            """
-            Simulated annealing for move selection.
-            """
-            current_board = deepcopy(chess_board)
-            current_temp = initial_temp
-            best_move = None
+        valid_moves = get_valid_moves(chess_board, player)
+        if not valid_moves:
+            return None
 
-            while current_temp > min_temp:
-                valid_moves = get_valid_moves(current_board, player)
-                if not valid_moves:
-                    break
+        best_move = None
+        alpha = -float("inf")
+        beta = float("inf")
 
-                # Randomly choose a neighbor state (valid move)
-                move = valid_moves[np.random.randint(len(valid_moves))]
-                new_board = deepcopy(current_board)
-                execute_move(new_board, move, player)
+        for move in valid_moves:
+            if time.time() - start_time >= time_limit:
+                raise TimeoutError
 
-                # Calculate heuristic changes
-                current_heuristic = heuristic(current_board, player)
-                new_heuristic = heuristic(new_board, player)
-                delta_e = new_heuristic - current_heuristic
+            sim_board = chess_board.copy()
+            execute_move(sim_board, move, player)
 
-                # Acceptance probability
-                if delta_e > 0 or np.random.rand() < np.exp(delta_e / current_temp):
-                    current_board = new_board
-                    best_move = move
+            move_score = self.alpha_beta(
+                sim_board, max_depth - 1, alpha, beta, False, player, opponent, start_time, time_limit
+            )
 
-                # Cool down the temperature
-                current_temp *= alpha
+            if move_score > alpha:
+                alpha = move_score
+                best_move = move
 
-            return best_move
+        self.store_in_table(board_hash, best_move, alpha, beta, max_depth)
+        return best_move
 
-        # Run simulated annealing to select the move
-        best_move = simulated_annealing(chess_board, player, initial_temp, alpha, min_temp)
+    def alpha_beta(self, board, depth, alpha, beta, is_maximizing, player, opponent, start_time, time_limit):
+        """
+        Perform alpha-beta pruning with state memorization at leaf nodes.
+        """
+        board_hash = hash(board.tobytes())
+        if board_hash in self.transposition_table:
+            cached_state = self.transposition_table[board_hash]
+            if cached_state["depth"] >= depth:
+                return cached_state["alpha"] if is_maximizing else cached_state["beta"]
 
-        # Ensure move selection fits within the time limit
-        time_taken = time.time() - start_time
-        if time_taken >= 2.0:
-            print("Time limit approaching, returning best move found so far.")
+        if time.time() - start_time >= time_limit:
+            raise TimeoutError
 
-        print("My AI's turn took ", time_taken, "seconds.")
+        is_endgame, p1_score, p2_score = check_endgame(board, player, opponent)
+        if is_endgame:
+            return p1_score - p2_score if player == 1 else p2_score - p1_score
+        if depth == 0:
+            return self.heuristic_score(board, player, opponent)
 
-        # If no move was found (unlikely), fall back to a random move
-        return best_move if best_move else random_move(chess_board, player)
+        valid_moves = get_valid_moves(board, player if is_maximizing else opponent)
+        if not valid_moves:
+            return self.alpha_beta(board, depth - 1, alpha, beta, not is_maximizing, player, opponent, start_time, time_limit)
+
+        if is_maximizing:
+            max_eval = -float("inf")
+            for move in valid_moves:
+                if time.time() - start_time >= time_limit:
+                    raise TimeoutError
+
+                sim_board = board.copy()
+                execute_move(sim_board, move, player)
+
+                eval_score = self.alpha_beta(sim_board, depth - 1, alpha, beta, False, player, opponent, start_time, time_limit)
+                max_eval = max(max_eval, eval_score)
+                alpha = max(alpha, eval_score)
+
+                if beta <= alpha:
+                    break  # Prune
+            self.store_in_table(board_hash, None, max_eval, beta, depth)
+            return max_eval
+        else:
+            min_eval = float("inf")
+            for move in valid_moves:
+                if time.time() - start_time >= time_limit:
+                    raise TimeoutError
+
+                sim_board = board.copy()
+                execute_move(sim_board, move, opponent)
+
+                eval_score = self.alpha_beta(sim_board, depth - 1, alpha, beta, True, player, opponent, start_time, time_limit)
+                min_eval = min(min_eval, eval_score)
+                beta = min(beta, eval_score)
+
+                if beta <= alpha:
+                    break  # Prune
+            self.store_in_table(board_hash, None, alpha, min_eval, depth)
+            return min_eval
+
+    def heuristic_score(self, board, player, opponent):
+        """
+        Heuristic evaluation of the board state.
+        """
+        player_score = np.sum(board == player)
+        opponent_score = np.sum(board == opponent)
+        mobility = len(get_valid_moves(board, player)) - len(get_valid_moves(board, opponent))
+        corners = [(0, 0), (0, len(board) - 1), (len(board) - 1, 0), (len(board) - 1, len(board) - 1)]
+        corner_score = sum(int(board[x, y] == player) - int(board[x, y] == opponent) for x, y in corners)
+
+        return 2 * (player_score - opponent_score) + 3 * mobility + 5 * corner_score
+
+    def store_in_table(self, board_hash, best_move, alpha, beta, depth):
+        """
+        Store state in the transposition table with a size limit.
+        """
+        if len(self.transposition_table) > self.max_table_size:
+            self.transposition_table.clear()  # Clear table if size limit exceeded
+
+        self.transposition_table[board_hash] = {"best_move": best_move, "alpha": alpha, "beta": beta, "depth": depth}
+
