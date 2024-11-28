@@ -6,10 +6,10 @@ import time
 
 
 @register_agent("james_agent")
-class StudentAgent(Agent):
+class JamesAgent(Agent):
     def __init__(self):
-        super(StudentAgent, self).__init__()
-        self.name = "JamesAgent"
+        super(JamesAgent, self).__init__()
+        self.name = "james_agent"
         self.transposition_table = {}  # Hash map for storing game states
         self.max_table_size = 90320
         """
