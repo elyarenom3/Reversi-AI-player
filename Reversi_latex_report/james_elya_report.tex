@@ -39,7 +39,13 @@ The agent is built on three foundational techniques:
 \end{enumerate}
 
 \subsection*{Iterative Deepening Search (IDS)}
-Iterative Deepening Search (IDS) is the backbone of the agent's decision-making process. It progressively deepens the search tree, evaluating board states at increasing depths until the \textbf{2-second per-move time limit} is reached. The primary advantage of IDS is that it ensures the agent always returns the \textbf{best move discovered} within the time constraint. For example, if the agent cannot fully explore the search tree due to time limits, it will still provide a move based on the most recent completed depth.
+\noindent \textbf{Iterative Deepening Search (IDS):} IDS combines the completeness of depth-first search (DFS) with the optimality of breadth-first search (BFS). The algorithm incrementally increases the search depth \(d\), evaluating all possible moves up to \(d\) within the available time budget. Mathematically, the time complexity of IDS is expressed as:
+\[
+T_{\text{IDS}} = \sum_{i=1}^{d} O(b^i) = O(b^d),
+\]
+where \(b\) is the branching factor, and \(d\) is the maximum depth. This approach ensures that the agent always returns the best move discovered at the deepest fully evaluated level, even if time runs out during deeper iterations. In Reversi, the branching factor \(b\) depends on the number of valid moves, which varies dynamically based on the board state.
+
+IDS is the backbone of our agent's decision-making process. It progressively deepens the search tree, evaluating board states at increasing depths until the \textbf{2-second per-move time limit} is reached. The primary advantage of IDS is that it ensures the agent always returns the \textbf{best move discovered} within the time constraint. If the agent cannot fully explore the search tree due to time limits, it will still provide a move based on the most recent completed depth.
 
 \noindent The IDS implementation operates as follows:
 \begin{enumerate}
@@ -51,10 +57,24 @@ Iterative Deepening Search (IDS) is the backbone of the agent's decision-making 
 This method is particularly effective in \textbf{time-critical environments} like competitive Reversi matches, ensuring robust decision-making under constraints.
 
 \subsection*{Minimax Algorithm with Alpha-Beta Pruning}
-The Minimax algorithm drives the agent's strategic decision-making by simulating all possible moves for both the player and opponent. The goal is to:
+\noindent The agent employs Minimax to evaluate game states by simulating all possible moves for both players under the assumption of perfect play. The utility function \(U(s)\) for a board state \(s\) is defined as:
 \[
-\text{Maximize: } \max_{\text{agent moves}} \min_{\text{opponent moves}} \text{(Heuristic Evaluation)}.
+U(s) = 
+\begin{cases} 
++1 & \text{if the agent wins}, \\
+-1 & \text{if the opponent wins}, \\
+0 & \text{if the game is a draw}.
+\end{cases}
 \]
+In practice, this binary evaluation is replaced with a heuristic function \(H(s)\), which provides a more granular assessment of non-terminal states. The Minimax algorithm recursively computes the optimal value for each state:
+\[
+V(s) = 
+\begin{cases} 
+\max_{a \in A(s)} V(s') & \text{if the agent is to move}, \\
+\min_{a \in A(s)} V(s') & \text{if the opponent is to move},
+\end{cases}
+\]
+where \(A(s)\) is the set of valid actions from state \(s\), and \(s'\) is the resulting state after action \(a\).
 
 \noindent \textbf{Alpha-Beta Pruning} optimizes the Minimax search by eliminating branches that do not influence the final decision. Specifically:
 \begin{itemize}
@@ -97,7 +117,7 @@ Weights were determined through \textbf{grid search} and \textbf{random sampling
 \end{itemize}
 
 
-\subsection*{Dynamic Adaptation}
+\section*{ Strategy and Dynamic Adaptation}
 Initially, our approach to developing a competitive Reversi agent involved segmenting the game into three distinct phases—\textbf{opening}, \textbf{midgame}, and \textbf{endgame}—based on the percentage of empty spaces on the board. Each phase was to be governed by a tailored strategy that reflected the unique priorities and dynamics of that stage of the game. 
 
 \noindent The \textbf{opening phase} prioritized mobility and strategic positioning, particularly emphasizing corners and avoiding risky moves near unstable edges. The \textbf{midgame} was designed to focus on balancing mobility and stability while limiting the opponent's options. Finally, the \textbf{endgame} sought to maximize disc captures and secure stable regions of the board, where moves are less likely to be flipped.
