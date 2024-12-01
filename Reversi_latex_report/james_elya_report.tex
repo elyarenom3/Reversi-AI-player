@@ -103,43 +103,42 @@ H(S) = 2.0 \times \text{Coin Parity} + 3.0 \times \text{Mobility} + 5.0 \times \
 \]
 Weights were determined through \textbf{grid search} and \textbf{random sampling} across various board sizes (6x6 to 12x12), optimizing for win rate, average discs captured, and mobility advantage.
 
-\subsection*{Board Size and Performance Impact}
-\noindent The agent dynamically adjusts its depth and breadth of exploration based on board size:
-\begin{itemize}
-    \item On \textbf{smaller boards} (e.g., 6x6), the agent reaches depths of 3-5.
-    \item On \textbf{larger boards} (e.g., 12x12), the increased branching factor limits depth to 2-3.
-\end{itemize}
 
-\noindent Breadth varies with game state:
-\begin{itemize}
-    \item Smaller boards: Evaluates 5-10 moves per state.
-    \item Larger boards: Evaluates up to 20 moves per state.
-\end{itemize}
+\section*{ Iterative approach to Development}
+Initially, our approach to developing a competitive Reversi agent involved dividing the game into three phases—\textbf{opening}, \textbf{midgame}, and \textbf{endgame}—based on the percentage of empty spaces. Each phase employed tailored strategies: the \textbf{opening phase} prioritized mobility and corner positioning while avoiding unstable edges; the \textbf{midgame} balanced mobility and stability to limit the opponent’s options; and the \textbf{endgame} focused on maximizing disc captures and securing stable regions.
 
+\noindent While this phase-based system provided a structured framework, it introduced significant complexity, including computational overhead and rigid phase boundaries. These limitations often overlooked opportunities unique to specific game states and lacked the flexibility to adapt across varying board sizes and opponent strategies, resulting in inconsistent performance.
 
-\section*{ Strategy and Dynamic Adaptation}
-Initially, our approach to developing a competitive Reversi agent involved segmenting the game into three distinct phases—\textbf{opening}, \textbf{midgame}, and \textbf{endgame}—based on the percentage of empty spaces on the board. Each phase was to be governed by a tailored strategy that reflected the unique priorities and dynamics of that stage of the game. 
-
-\noindent The \textbf{opening phase} prioritized mobility and strategic positioning, particularly emphasizing corners and avoiding risky moves near unstable edges. The \textbf{midgame} was designed to focus on balancing mobility and stability while limiting the opponent's options. Finally, the \textbf{endgame} sought to maximize disc captures and secure stable regions of the board, where moves are less likely to be flipped.
-
-\noindent We implemented these strategies by defining threshold percentages of empty cells to determine the transition between phases. For each phase, we designed evaluation heuristics and decision-making logic tailored to its objectives. During testing, this phase-based design demonstrated reasonable success in addressing the specific challenges of each part of the game. For example, it effectively avoided early pitfalls like \textbf{corner-adjacent moves} in the opening phase and navigated the more tactical decisions of the midgame.
-
-\noindent However, while this phase-based system provided a clear framework, it introduced significant complexity. Transitioning between phases required additional computational overhead, and in some cases, the boundaries between phases were too rigid. These transitions often overlooked opportunities or risks unique to specific game states, particularly when the board’s configuration didn't neatly align with predefined thresholds. Furthermore, this approach lacked the flexibility to dynamically adapt across varying board sizes and opponent strategies, leading to inconsistent performance during testing.
-
-\noindent Through \textbf{iterative design and testing}, we realized that a unified strategy, driven by a single evaluation function and adaptable heuristics, could achieve better results without the added complexity. By incorporating heuristics that naturally accounted for phase-specific priorities—such as \textbf{corner control}, \textbf{stability}, and \textbf{mobility}—we captured the essence of the phase-based approach while maintaining simplicity and computational efficiency. 
-
-\noindent For example, \textbf{dynamic weighting of heuristics} based on board size and game state allowed the agent to adapt organically, reducing the need for explicit phase transitions.
-
+\noindent Through \textbf{iterative design and testing}, we developed a unified strategy using a single evaluation function with \textbf{adaptable heuristics} that accounted for phase-specific priorities such as \textbf{corner control}, \textbf{stability}, and \textbf{mobility}. By dynamically weighting heuristics based on board size and game state, the agent could adapt organically, reducing the need for explicit phase transitions while maintaining both simplicity and computational efficiency.
 
 \section*{Quantitative Analysis}
 \subsection*{Depth of Search}
-On smaller boards (6x6), the agent typically reaches depths of 3 to 5. On larger boards (12x12), the depth is limited to 2 to 3 due to the increased branching factor. Alpha-beta pruning ensures depth variation across branches.
+The depth of search achieved by the agent varies significantly based on board size and game state. On smaller boards, such as 6x6, the agent can typically reach search depths of about 4-5 within the two-second time limit, as the branching factor—the number of valid moves available—is relatively low. On larger boards like 12x12, the increased branching factor limits the achievable depth to around 3. The branching factor grows exponentially with the number of discs on the board, significantly increasing the computational complexity.
+
+\noindent The depth achieved can vary dynamically across different branches due to alpha-beta pruning, as branches with higher heuristic scores are explored more thoroughly, while less promising branches are pruned early. 
 
 \subsection*{Search Breadth}
-The agent evaluates 5-10 moves per state on smaller boards and over 20 on larger ones. Move ordering and pruning reduce unnecessary computations, prioritizing high-value actions such as corner captures.
+The agent’s search breadth, defined as the number of valid moves considered at each level of the game tree, depends on the board size and game state. On smaller boards (6x6), the average breadth ranges from 5 to 10 moves, while larger boards (12x12) typically have 15 to 20 valid moves due to increased mobility. 
+
+\noindent \textbf{Alpha-beta pruning} significantly reduces the effective breadth by eliminating branches that cannot influence the outcome, focusing computation on high-value moves. Additionally, the agent employs move ordering based on heuristic scores, prioritizing moves that maximize corner control and mobility. This ordering further enhances pruning efficiency, ensuring deeper searches within the fixed time limit.
+
 
 \subsection*{Impact of Board Size}
-Larger boards increase computational complexity, requiring customized heuristics emphasizing corner control. Smaller boards allow deeper searches due to reduced branching factors.
+While the agent's heuristic weights were not explicitly adjusted for varying board sizes, they were fine-tuned to perform well across all tested configurations (6x6 to 12x12). As a result, the agent achieved consistent performance despite the increased complexity of larger boards. Larger boards introduce a higher branching factor, which limits search depth and increases computational demands, particularly in midgame scenarios. 
+
+\noindent Ideally, board-specific adjustments, such as increasing the weight of corner control on larger boards to reflect its greater strategic importance, would further optimize performance. However, the general robustness of the fine-tuned heuristic ensured that similar results were observed during testing across all board sizes, minimizing the need for such explicit adaptations within the time constraints of development.
+
+\subsection*{Heuristics, Pruning Methods, and Move Ordering Approaches Not Used}
+During development, we experimented with additional heuristics such as edge control and advanced stability metrics. While edge control initially showed promise in midgame scenarios, it often conflicted with corner control, leading to suboptimal moves in certain situations. Similarly, advanced stability metrics, which classified discs as stable, semi-stable, or unstable, added computational overhead without a significant performance improvement within the time constraints. In move ordering, a static prioritization approach was tested but was less effective than dynamic ordering based on heuristic scores, as it failed to adapt to changing game states.
+
+\subsection*{Predicted Win Rates}
+
+To evaluate the quality of our agent's play, we conducted rigorous testing across multiple dimensions. First, we performed extensive head-to-head simulations against a variety of opponent agents that we constructed ourselves using different approaches (some with the three-phase approach, some with just a heuristic, some with Monte Carlo, some with Minimax but different parameters), as well as the provided agents. These simulations were conducted on even boards of varying sizes, ranging from 6x6 to 12x12, to ensure the agent's adaptability to different game scenarios. We also engaged in iterative design, tweaking weights in the heuristic evaluation function and observing the impact on performance through controlled experiments.
+
+\noindent Beyond automated testing, we played directly against the agent as humans to assess its strategic depth and adaptability in real-time scenarios.
+These are our predictions:
+The agent is predicted to achieve a win rate of approximately \textbf{98\%} against the random agent due to its heuristic-guided decision-making and ability to capitalize on random mistakes. Against an average human player, such as "Dave," the win rate is estimated to be \textbf{80-90\%}, with the agent’s superior lookahead and corner control strategies providing a decisive edge. Against classmates' agents, the win rate is expected to range between \textbf{60-80\%}, depending on the sophistication of competing algorithms, with challenges arising primarily from advanced heuristics that account for board size or Monte Carlo-based strategies.
+
 
 \subsection*{Advantages}
 The principal advantage of our agent is the integration of Iterative Deepening Search (IDS) with Minimax and Alpha-Beta Pruning. This hybrid approach allows for efficient exploration of the game tree within the strict computational constraints imposed by the single-threaded Mimi-Server paired with the tournament’s two-second decision time limit. During midgame scenarios, when the branching factor is at its peak, this strategy allows the agent to focus computational resources on promising branches, effectively reducing the branching factor and maximizing search depth.
@@ -155,19 +154,6 @@ The fixed size and hashing approach of the transposition table introduce signifi
 
 Finally, the agent's performance is notably influenced by board dimensions. On larger boards, where complex evaluations and deeper searches are required, the agent performs well. However, on smaller boards with simpler states, the computational resources are not fully utilized, leading to diminished efficiency. This disparity underscores the need for a more adaptive approach to handling diverse board sizes effectively.
 
-
-\section*{Evaluation and predicted win rates of our agent}
-
-To evaluate the quality of our agent's play, we conducted rigorous testing across multiple dimensions. First, we performed extensive head-to-head simulations against a variety of opponent agents that we constructed ourselves using different approaches (some with the three-phase approach, some with just a heuristic, some with Monte Carlo, some with Minimax but different parameters), as well as the provided agents. These simulations were conducted on even boards of varying sizes, ranging from 6x6 to 12x12, to ensure the agent's adaptability to different game scenarios. We also engaged in iterative design, tweaking weights in the heuristic evaluation function and observing the impact on performance through controlled experiments.
-
-\noindent Beyond automated testing, we played directly against the agent as humans to assess its strategic depth and adaptability in real-time scenarios. This hands-on approach gave us unique insights into the agent’s strengths and weaknesses, revealing its ability to effectively capitalize on human errors while maintaining a consistent and strategic playstyle. Additionally, we consulted existing research on Reversi strategies and algorithms to refine our approach, incorporating insights from both academic sources and prior implementations of game-playing AI.
-
-\noindent Based on its strategic design, the agent demonstrates strong quantitative performance:
-\begin{itemize}
-    \item \textbf{Against the Random Agent:} We predict a win rate of approximately \textbf{98 percent}, as the agent’s heuristic-guided decision-making vastly outperforms a purely random strategy. Autoplay tests corroborate this with nearly flawless win rates.
-    \item \textbf{Against an Average Human Player:} Against an average human player, such as "Dave," the estimated win rate is between \textbf{80-90 percent}, as the agent’s prioritization of stable positions like corners allows it to excel in structured play, and it has better lookahead depth than a normal human. However, an experienced Reversi player could occasionally exploit tactical weaknesses or force mistakes.
-    \item \textbf{Against Classmates’ Agents:} The predicted win rate is \textbf{70-80 percent}, depending on the sophistication of the competing strategies. While our agent's iterative deepening and heuristic evaluation provide a competitive edge, advanced methods such as Monte Carlo Tree Search or more complex heuristics could pose challenges.
-\end{itemize}
 
 
 \section*{Future Improvements}
