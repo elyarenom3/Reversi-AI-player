@@ -117,7 +117,7 @@ The depth of search achieved by the agent varies significantly based on board si
 
 \noindent The depth achieved can vary dynamically across different branches due to alpha-beta pruning, as branches with higher heuristic scores are explored more thoroughly, while less promising branches are pruned early. 
 
-\subsection*{Search Breadth}
+\subsection*{Breadth of Search}
 The agent’s search breadth, defined as the number of valid moves considered at each level of the game tree, depends on the board size and game state. On smaller boards (6x6), the average breadth ranges from 5 to 10 moves, while larger boards (12x12) typically have 15 to 20 valid moves due to increased mobility. 
 
 \noindent \textbf{Alpha-beta pruning} significantly reduces the effective breadth by eliminating branches that cannot influence the outcome, focusing computation on high-value moves. Additionally, the agent employs move ordering based on heuristic scores, prioritizing moves that maximize corner control and mobility. This ordering further enhances pruning efficiency, ensuring deeper searches within the fixed time limit.
@@ -228,6 +228,6 @@ By implementing these improvements, the agent would achieve greater adaptability
 
 
 \section*{Acknowledgements}
-This project was informed by class discussions, academic resources, and testing against various opponents. We consulted example code for alpha-beta pruning and utilized grid search for heuristic tuning.
+This project was class slides, and testing against various opponents. We consulted example code for alpha-beta pruning and utilized grid search for heuristic tuning.
 
 \end{document}
