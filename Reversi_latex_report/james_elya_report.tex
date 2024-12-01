@@ -111,15 +111,6 @@ Initially, our approach to developing a competitive Reversi agent involved segme
 \noindent For example, \textbf{dynamic weighting of heuristics} based on board size and game state allowed the agent to adapt organically, reducing the need for explicit phase transitions.
 
 
-
-\section*{Evaluation}
-
-To evaluate the quality of our agent's play, we conducted rigorous testing across multiple dimensions. First, we performed extensive head-to-head simulations against a variety of opponent agents that we constructed ourselves using different approaches (some with the three-phase approach, some with just a heuristic, some with monte carlo, some with minimax but different parameters), as well as the provided agents. These simulations were conducted on even boards of varying sizes, ranging from 6x6 to 12x12, to ensure the agent's adaptability to different game scenarios. We also engaged in iterative design, tweaking weights in the heuristic evaluation function and observing the impact on performance through controlled experiments.
-
-Beyond automated testing, we played directly against the agent as humans to assess its strategic depth and adaptability in real-time scenarios. This hands-on approach gave us unique insights into the agent’s strengths and weaknesses, revealing its ability to effectively capitalize on human errors while maintaining a consistent and strategic playstyle. Additionally, we consulted existing research on Reversi strategies and algorithms to refine our approach, incorporating insights from both academic sources and prior implementations of game-playing AI.
-
-Based on its strategic design, the agent demonstrates strong quantitative performance. Against the Random Agent, we predict a win rate of approximately 98%, as the agent’s heuristic-guided decision-making vastly outperforms a purely random strategy. Autoplay tests corroborate this with nearly flawless win rates. Against an average human player, such as "Dave," the estimated win rate is between 80-90%, as the agent’s prioritization of stable positions like corners allows it to excel in structured play and it has better lookahead depth than a normal human. However, an experienced Reversi player could occasionally exploit tactical weaknesses or force mistakes. Against agents developed by classmates, the predicted win rate is 70-80%, depending on the sophistication of the competing strategies. While our agent's iterative deepening and heuristic evaluation provide a competitive edge, advanced methods such as Monte Carlo Tree Search or more complex heuristics could pose challenges.
-
 \section*{Quantitative Analysis}
 \subsection*{Depth of Search}
 On smaller boards (6x6), the agent typically reaches depths of 3 to 5. On larger boards (12x12), the depth is limited to 2 to 3 due to the increased branching factor. Alpha-beta pruning ensures depth variation across branches.
@@ -129,13 +120,6 @@ The agent evaluates 5-10 moves per state on smaller boards and over 20 on larger
 
 \subsection*{Impact of Board Size}
 Larger boards increase computational complexity, requiring customized heuristics emphasizing corner control. Smaller boards allow deeper searches due to reduced branching factors.
-
-\subsection*{Predicted Win Rates}
-\begin{itemize}
-    \item \textbf{Random Agent:} 98\%
-    \item \textbf{Average Human (e.g., "Dave"):} 80-90\%
-    \item \textbf{Classmates' Agents:} 70-80\%
-\end{itemize}
 
 \subsection*{Advantages}
 The principal advantage of our agent is the integration of Iterative Deepening Search (IDS) with Minimax and Alpha-Beta Pruning. This hybrid approach allows for efficient exploration of the game tree within the strict computational constraints imposed by the single-threaded Mimi-Server paired with the tournament’s two-second decision time limit. During midgame scenarios, when the branching factor is at its peak, this strategy allows the agent to focus computational resources on promising branches, effectively reducing the branching factor and maximizing search depth.
@@ -150,6 +134,20 @@ Our agent's heuristic design is limited by the absence of advanced evaluation me
 The fixed size and hashing approach of the transposition table introduce significant inefficiencies. On smaller boards, the sparsity of the table results in underutilization. Conversely, on larger boards, hash collisions and limited capacity lead to frequent evictions of valuable state information, compromising the caching mechanism's effectiveness. These issues reduce the consistency of the agent's performance across varying board sizes, as the transposition table struggles to adapt to the dynamic demands of different game configurations.
 
 Finally, the agent's performance is notably influenced by board dimensions. On larger boards, where complex evaluations and deeper searches are required, the agent performs well. However, on smaller boards with simpler states, the computational resources are not fully utilized, leading to diminished efficiency. This disparity underscores the need for a more adaptive approach to handling diverse board sizes effectively.
+
+
+\section*{Evaluation and predicted win rates of our agent}
+
+To evaluate the quality of our agent's play, we conducted rigorous testing across multiple dimensions. First, we performed extensive head-to-head simulations against a variety of opponent agents that we constructed ourselves using different approaches (some with the three-phase approach, some with just a heuristic, some with Monte Carlo, some with Minimax but different parameters), as well as the provided agents. These simulations were conducted on even boards of varying sizes, ranging from 6x6 to 12x12, to ensure the agent's adaptability to different game scenarios. We also engaged in iterative design, tweaking weights in the heuristic evaluation function and observing the impact on performance through controlled experiments.
+
+\noindent Beyond automated testing, we played directly against the agent as humans to assess its strategic depth and adaptability in real-time scenarios. This hands-on approach gave us unique insights into the agent’s strengths and weaknesses, revealing its ability to effectively capitalize on human errors while maintaining a consistent and strategic playstyle. Additionally, we consulted existing research on Reversi strategies and algorithms to refine our approach, incorporating insights from both academic sources and prior implementations of game-playing AI.
+
+\noindent Based on its strategic design, the agent demonstrates strong quantitative performance:
+\begin{itemize}
+    \item \textbf{Against the Random Agent:} We predict a win rate of approximately \textbf{98 percent}, as the agent’s heuristic-guided decision-making vastly outperforms a purely random strategy. Autoplay tests corroborate this with nearly flawless win rates.
+    \item \textbf{Against an Average Human Player:} Against an average human player, such as "Dave," the estimated win rate is between \textbf{80-90 percent}, as the agent’s prioritization of stable positions like corners allows it to excel in structured play, and it has better lookahead depth than a normal human. However, an experienced Reversi player could occasionally exploit tactical weaknesses or force mistakes.
+    \item \textbf{Against Classmates’ Agents:} The predicted win rate is \textbf{70-80 percent}, depending on the sophistication of the competing strategies. While our agent's iterative deepening and heuristic evaluation provide a competitive edge, advanced methods such as Monte Carlo Tree Search or more complex heuristics could pose challenges.
+\end{itemize}
 
 
 \section*{Future Improvements}
