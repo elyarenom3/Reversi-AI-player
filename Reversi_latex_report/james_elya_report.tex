@@ -57,7 +57,7 @@ IDS is the backbone of our agent's decision-making process. It progressively dee
 This method is particularly effective in \textbf{time-critical environments} like competitive Reversi matches, ensuring robust decision-making under constraints.
 
 \subsection*{Minimax Algorithm with Alpha-Beta Pruning}
-\noindent The agent employs Minimax to evaluate game states by simulating all possible moves for both players under the assumption of perfect play. The utility function \(U(s)\) for a board state \(s\) is defined as:
+\noindent Ideally, the agent would employ Minimax to evaluate game states by simulating all possible moves for both players under the assumption of perfect play until the very end of the game:
 \[
 U(s) = 
 \begin{cases} 
@@ -66,7 +66,7 @@ U(s) =
 0 & \text{if the game is a draw}.
 \end{cases}
 \]
-In practice, this binary evaluation is replaced with a heuristic function \(H(s)\), which provides a more granular assessment of non-terminal states. The Minimax algorithm recursively computes the optimal value for each state:
+However, in practice, minimax cannot compute that deep it would be far too complex, so this binary evaluation is replaced with a heuristic function \(H(s)\), which provides a more granular assessment of non-terminal states:
 \[
 V(s) = 
 \begin{cases} 
@@ -197,15 +197,6 @@ While our current agent demonstrates strong performance, several areas for furth
     C = k \cdot b^d,
     \]
     where \(b\) is the average branching factor, \(d\) is the expected depth, and \(k\) is a scaling factor based on board size. Additionally, techniques such as Least Recently Used (LRU) eviction policies could prevent valuable state information from being overwritten during gameplay.
-
-    \item \textbf{Move Ordering with Machine Learning (if we were allowed):}
-    Enhancing move ordering could significantly improve the efficiency of alpha-beta pruning. Instead of relying on heuristic scores alone, a supervised machine learning model could predict the likelihood of a move being optimal based on features such as:
-    \begin{itemize}
-        \item Board configuration.
-        \item Opponent’s recent moves.
-        \item Stability and mobility metrics.
-    \end{itemize}
-    These predictions could prioritize the most promising moves, maximizing pruning opportunities and allowing deeper searches within the time constraint. A gradient boosting classifier or neural network trained on self-play data could serve this purpose.
 
     \item \textbf{Integration of Monte Carlo Tree Search (MCTS):}
     While Minimax with alpha-beta pruning is effective, Monte Carlo Tree Search (MCTS) could be integrated as a complementary or alternative approach. MCTS is particularly effective in midgame scenarios with high branching factors, as it uses random simulations to evaluate moves without requiring a complete search. An adaptive hybrid model could use:
