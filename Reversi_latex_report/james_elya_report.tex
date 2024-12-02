@@ -141,80 +141,50 @@ The agent is predicted to achieve a win rate of approximately \textbf{98\%} agai
 
 
 \subsection*{Advantages}
-The principal advantage of our agent is the integration of Iterative Deepening Search (IDS) with Minimax and Alpha-Beta Pruning. This hybrid approach allows for efficient exploration of the game tree within the strict computational constraints imposed by the single-threaded Mimi-Server paired with the tournament’s two-second decision time limit. During midgame scenarios, when the branching factor is at its peak, this strategy allows the agent to focus computational resources on promising branches, effectively reducing the branching factor and maximizing search depth.
+The principal advantage of our agent is the integration of Iterative Deepening Search (IDS) with Minimax and Alpha-Beta Pruning. This hybrid approach allows for efficient exploration of the game tree within the strict computational constraints imposed by the single-threaded Mimi-Server and the tournament’s two-second decision time limit. During mid game scenarios, where the branching factor is at its peak, this strategy enables the agent to focus exploration on the most promising branches, effectively reducing the branching factor and maximizing search depth.
 
-IDS ensures that the agent always has a feasible move prepared by incrementally deepening the search, even if the search does not reach a terminal state. This dynamic adjustment prevents suboptimal decisions, such as random moves, which would inevitably occur under a static Minimax approach constrained by Alpha-Beta pruning alone.
+IDS ensures the agent always has a feasible move prepared by incrementally deepening the search, even if the search does not reach a terminal state. This dynamic adjustment prevents suboptimal decisions, such as random moves, which could otherwise occur under a static Minimax approach constrained by Alpha-Beta pruning alone.
 
-To further optimize the search, we incorporated a transposition table to store previously evaluated game states. This mechanism minimizes redundant computations by leveraging memoization principles. Caching is particularly effective in a game like Reversi, where many states recur due to overlapping gameplay scenarios. In the context of our Iterative Deepening Search (IDS) strategy, the transposition table is particularly valuable as it avoids recomputing state evaluations across successive iterations of increasing depth.
+\subsection*{Weaknesses}
+\noindent \textbf{Lack of State Memoization:}  
+Although Minimax provides significant strategic advantages, the 2-second time limit imposes notable challenges, particularly on larger boards where the search often does not reach terminal states. As board size increases, the branching factor expands exponentially, creating a vast number of potential moves to evaluate. This growth highlights a critical limitation of the agent: its inability to efficiently explore deeper levels of the game tree, a shortcoming that could hinder its competitiveness in a tournament environment.
 
-\subsection*{Disadvantages}
-Our agent's heuristic design is limited by the absence of advanced evaluation metrics, such as coin parity and stability heuristics. These metrics provide critical insights into midgame and endgame dynamics, potentially enhancing the agent's ability to make nuanced strategic decisions. \textbf{[SOURCE]}.
-
-The fixed size and hashing approach of the transposition table introduce significant inefficiencies. On smaller boards, the sparsity of the table results in underutilization. Conversely, on larger boards, hash collisions and limited capacity lead to frequent evictions of valuable state information, compromising the caching mechanism's effectiveness. These issues reduce the consistency of the agent's performance across varying board sizes, as the transposition table struggles to adapt to the dynamic demands of different game configurations.
-
-Finally, the agent's performance is notably influenced by board dimensions. On larger boards, where complex evaluations and deeper searches are required, the agent performs well. However, on smaller boards with simpler states, the computational resources are not fully utilized, leading to diminished efficiency. This disparity underscores the need for a more adaptive approach to handling diverse board sizes effectively.
+The absence of a caching mechanism, such as a transposition table, exacerbates this issue. Without it, the agent repeatedly evaluates the same game states, especially in scenarios with recurring patterns due to overlapping moves or symmetrical configurations. This redundancy wastes computational resources, which are especially crucial during the midgame when the branching factor and complexity are at their peak. Additionally, iterative deepening, while useful for incremental depth increases, becomes less consistent without memoization, as the agent may reprocess previously explored states, further straining the limited computation time.
 
 
+\noindent \textbf{Simplistic Heuristics:}  
+While the current heuristic evaluation function covers basic elements like coin parity, mobility, and corner control, it lacks more advanced metrics such as edge evaluation and stability. These metrics could provide critical insights into the long-term strategic implications of moves, especially in the midgame and endgame \cite{heuristics_in_othello}.
 
 \section*{Future Improvements}
-While our current agent demonstrates strong performance, several areas for further enhancement could significantly improve its strategic depth, adaptability, and computational efficiency. Below are detailed proposals for future improvements:
+\noindent \textbf{Dynamic Transposition Table with Preconfigured Sizes}  
+We began developing a state memoization component for our agent but did not have the resources or time to finalize a working solution. A transposition table is an enhancement that can significantly improve the agent's ability to explore deeper game states within time constraints, particularly against agents using a similar strategy to ours. This optimization works by caching the results of previously evaluated states, allowing the agent to reuse these evaluations instead of recalculating them. This is especially important in Reversi, where many board states recur due to overlapping move sequences.
 
-\begin{enumerate}
-    \item \textbf{Dynamic Heuristic Weights:}
-    The current heuristic function relies on fixed weights for coin parity, mobility, and corner control, which remain constant throughout the game. However, the relative importance of these factors changes across the opening, midgame, and endgame. Future iterations could implement dynamic weights that adapt based on the current game phase. For instance:
-    \begin{itemize}
-        \item \textbf{Opening Phase:} Prioritize \textit{mobility} to maximize potential moves and control of the board.
-        \item \textbf{Midgame:} Focus on \textit{corner control} and edge stability to secure strategic positions.
-        \item \textbf{Endgame:} Emphasize \textit{coin parity} to ensure dominance in disc count.
-    \end{itemize}
-    Dynamic weighting can be implemented through a linear or non-linear function, such as:
-    \[
-    w_i(t) = w_i^{\text{base}} + f(t) \cdot \Delta w_i,
-    \]
-    where \(w_i^{\text{base}}\) is the base weight, \(f(t)\) is a phase-specific adjustment factor, and \(\Delta w_i\) is the change in weight across game phases. The function \(f(t)\) could depend on metrics such as the percentage of empty spaces or the mobility difference between players. Techniques like reinforcement learning could also optimize these weights through self-play, allowing the agent to learn phase-specific strategies.
+The benefits of integrating a transposition table are twofold:
+\begin{itemize}
+    \item \textbf{Efficient Exploration:} By storing evaluations, the agent can avoid redundant computations. When a previously encountered board state is revisited, the result can be retrieved directly from the table, freeing up time and resources to explore deeper in the game tree.
+    \item \textbf{Deeper Searches:} With the time saved by avoiding redundant evaluations, the agent can allocate its computational budget to exploring new, unexplored game states. This enables better-informed decisions by considering moves further down the game tree, particularly in scenarios requiring deeper strategic analysis.
+\end{itemize}
 
-    \item \textbf{Advanced Stability Metrics:}
-    While the current heuristic indirectly accounts for stability through corner control, explicitly incorporating stability metrics could further refine decision-making. Stability measures could classify discs as:
-    \begin{itemize}
-        \item \textbf{Stable:} Discs that cannot be flipped for the remainder of the game (e.g., corners and discs surrounded by stable pieces).
-        \item \textbf{Semi-Stable:} Discs that are stable under certain conditions, such as specific opponent moves.
-        \item \textbf{Unstable:} Discs that are highly vulnerable to flipping.
-    \end{itemize}
-    A stability metric \(S\) could be integrated into the heuristic function:
-    \[
-    S = \sum_{i} s_i \cdot v_i,
-    \]
-    where \(s_i\) represents the stability classification score (e.g., 1 for stable, 0.5 for semi-stable, and 0 for unstable), and \(v_i\) is the positional value of the disc. Incorporating this metric would enable the agent to make more nuanced decisions, such as avoiding risky placements near unstable edges or prioritizing moves that cluster stable regions.
+The design would incorporate four preconfigured transposition tables stored locally for the board sizes 6×6, 8×8, 10×10, and 12×12, collectively not exceeding 500 MB. Using efficient hashing principles, each table will be sized proportionally to minimize state evictions on larger boards while avoiding sparsity on smaller boards, ensuring optimal performance across all dimensions.
 
-    \item \textbf{Dynamic Transposition Tables:}
-    The current transposition table design uses a fixed size and hashing approach, which introduces inefficiencies across varying board dimensions. A dynamic transposition table system could address these limitations by preconfiguring table sizes tailored to specific board dimensions:
-    \begin{itemize}
-        \item \textbf{Smaller Boards (e.g., 6x6):} Use smaller table sizes to minimize overhead, as the game states are simpler and searches terminate faster.
-        \item \textbf{Larger Boards (e.g., 12x12):} Allocate larger tables to accommodate the increased number of states and deeper searches.
-    \end{itemize}
-    The capacity \(C\) of the transposition table could be dynamically allocated as:
-    \[
-    C = k \cdot b^d,
-    \]
-    where \(b\) is the average branching factor, \(d\) is the expected depth, and \(k\) is a scaling factor based on board size. Additionally, techniques such as Least Recently Used (LRU) eviction policies could prevent valuable state information from being overwritten during gameplay.
+\noindent \textbf{Dynamic Heuristic and Stability Metrics}  
+The agent's heuristic function currently uses static weights, which do not adapt to the varying importance of game factors across different phases. Incorporating dynamic weighting would enable the agent to adjust priorities throughout the game:  
+\begin{itemize}
+    \item \textbf{Early Game:} Focus on mobility to maximize potential moves.
+    \item \textbf{Mid-Game:} Emphasize corner control and edge positioning to stabilize regions and limit the opponent’s options.
+    \item \textbf{Endgame:} Prioritize coin parity and piece count to secure victory.
+\end{itemize}
 
-    \item \textbf{Integration of Monte Carlo Tree Search (MCTS):}
-    While Minimax with alpha-beta pruning is effective, Monte Carlo Tree Search (MCTS) could be integrated as a complementary or alternative approach. MCTS is particularly effective in midgame scenarios with high branching factors, as it uses random simulations to evaluate moves without requiring a complete search. An adaptive hybrid model could use:
-    \begin{itemize}
-        \item Minimax for shallow depths or when reliable heuristics are available.
-        \item MCTS for deeper or highly complex states where heuristic evaluation is less effective.
-    \end{itemize}
+Additionally, edge evaluation could be improved by distinguishing between stable edges (secured by controlled corners) and unstable edges (vulnerable to flips). Introducing a gradient-based stability heuristic would classify pieces as stable, semi-stable, or unstable, assigning higher scores to clusters of stable pieces, particularly near corners and edges. These adjustments would reflect long-term strategic value and enhance the agent’s decision-making across all phases.
 
-    \item \textbf{Parallelization and Hardware Optimization:}
-    To maximize computational resources, future iterations could implement parallel search techniques:
-    \begin{itemize}
-        \item \textbf{Parallel Alpha-Beta Pruning:} Distribute branches of the search tree across multiple threads or processors.
-        \item \textbf{GPU Acceleration:} Use GPUs for large-scale evaluations, particularly for heuristic calculations and simulations.
-    \end{itemize}
+\section*{References}
+\begin{thebibliography}{9}
 
+\bibitem{heuristics_in_othello}
+Vaishnavi Sannidhanam and Muthukaruppan Annamalai, 
+\emph{An Analysis of Heuristics in Othello}. 
+Department of Computer Science and Engineering, Paul G. Allen Center, University of Washington, Seattle, WA-98195. \url{mailto:vaishu@cs.washington.edu, muthu@cs.washington.edu}.
 
-\end{enumerate}
-
-By implementing these improvements, the agent would achieve greater adaptability, efficiency, and competitiveness, particularly against advanced human players and sophisticated AI opponents.
+\end{thebibliography}
 
 \end{document}
