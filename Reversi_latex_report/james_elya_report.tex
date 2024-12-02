@@ -39,7 +39,7 @@ The agent is built on three foundational techniques:
 \end{enumerate}
 
 \subsection*{Iterative Deepening Search (IDS)}
-\noindent \textbf{Iterative Deepening Search (IDS):} IDS combines the completeness of depth-first search (DFS) with the optimality of breadth-first search (BFS). The algorithm incrementally increases the search depth \(d\), evaluating all possible moves up to \(d\) within the available time budget. Mathematically, the time complexity of IDS is expressed as:
+\noindent \textbf{Iterative Deepening Search (IDS):} IDS combines the completeness of depth-first search (DFS) with the optimality of breadth-first search (BFS). We consulted the textbook for pseudocode that influenced our code  \cite{ids_russell}. The algorithm incrementally increases the search depth \(d\), evaluating all possible moves up to \(d\) within the available time budget. Mathematically, the time complexity of IDS is expressed as:
 \[
 T_{\text{IDS}} = \sum_{i=1}^{d} O(b^i) = O(b^d),
 \]
@@ -76,7 +76,7 @@ V(s) =
 \]
 where \(A(s)\) is the set of valid actions from state \(s\), and \(s'\) is the resulting state after action \(a\).
 
-\noindent \textbf{Alpha-Beta Pruning} optimizes the Minimax search by eliminating branches that do not influence the final decision. Specifically:
+\noindent \textbf{Alpha-Beta Pruning} optimizes the Minimax search by eliminating branches that do not influence the final decision\cite{alpha_beta}. Specifically:
 \begin{itemize}
     \item \(\alpha\): Tracks the \textbf{best score} achievable by the maximizing player (agent).
     \item \(\beta\): Tracks the \textbf{best score} achievable by the minimizing player (opponent).
@@ -157,14 +157,11 @@ While the current heuristic evaluation function covers basic elements like coin 
 
 \section*{Future Improvements}
 \noindent \textbf{Dynamic Transposition Table with Preconfigured Sizes}  
-We began developing a state memoization component for our agent but did not have the resources or time to finalize a working solution. A transposition table is an enhancement that can significantly improve the agent's ability to explore deeper game states within time constraints, particularly against agents using a similar strategy to ours. This optimization works by caching the results of previously evaluated states, allowing the agent to reuse these evaluations instead of recalculating them. This is especially important in Reversi, where many board states recur due to overlapping move sequences.
-
-The benefits of integrating a transposition table are twofold:
+We began developing a state memoization component for our agent but did not have the resources or time to finalize a working solution. A transposition table is an enhancement that can significantly improve the agent's ability to explore deeper game states within time constraints, particularly against agents using a similar strategy to ours. This optimization works by caching the results of previously evaluated states, allowing the agent to reuse these evaluations instead of recalculating them. This is especially important in Reversi, where many board states recur due to overlapping move sequences. The benefits of integrating a transposition table are twofold:
 \begin{itemize}
     \item \textbf{Efficient Exploration:} By storing evaluations, the agent can avoid redundant computations. When a previously encountered board state is revisited, the result can be retrieved directly from the table, freeing up time and resources to explore deeper in the game tree.
     \item \textbf{Deeper Searches:} With the time saved by avoiding redundant evaluations, the agent can allocate its computational budget to exploring new, unexplored game states. This enables better-informed decisions by considering moves further down the game tree, particularly in scenarios requiring deeper strategic analysis.
 \end{itemize}
-
 The design would incorporate four preconfigured transposition tables stored locally for the board sizes 6×6, 8×8, 10×10, and 12×12, collectively not exceeding 500 MB. Using efficient hashing principles, each table will be sized proportionally to minimize state evictions on larger boards while avoiding sparsity on smaller boards, ensuring optimal performance across all dimensions.
 
 \noindent \textbf{Dynamic Heuristic and Stability Metrics}  
@@ -174,11 +171,27 @@ The agent's heuristic function currently uses static weights, which do not adapt
     \item \textbf{Mid-Game:} Emphasize corner control and edge positioning to stabilize regions and limit the opponent’s options.
     \item \textbf{Endgame:} Prioritize coin parity and piece count to secure victory.
 \end{itemize}
-
 Additionally, edge evaluation could be improved by distinguishing between stable edges (secured by controlled corners) and unstable edges (vulnerable to flips). Introducing a gradient-based stability heuristic would classify pieces as stable, semi-stable, or unstable, assigning higher scores to clusters of stable pieces, particularly near corners and edges. These adjustments would reflect long-term strategic value and enhance the agent’s decision-making across all phases.
 
-\section*{References}
+\section*{Use of Input Sources}
+
+In the development of our Reversi agent, we relied primarily on foundational concepts provided in the class slides, the textbook, and our own understanding of algorithms such as \textbf{Alpha-Beta Pruning} and \textbf{Iterative Deepening Search (IDS)}. These slides served as a conceptual guide for implementing these algorithms; however, no code or direct excerpts were copied. To refine and optimize certain aspects of our code, we utilized ChatGPT selectively mostly for debugging. For example, debugging the integration of IDS with alpha-beta pruning. We asked:
+\begin{quote}
+    "How can I handle time constraints effectively when combining Iterative Deepening Search (IDS) with alpha-beta pruning? Suggest strategies for managing incomplete search depths."
+\end{quote}
+The response highlighted the importance of returning the best move from the deepest fully explored level if the time expired during the current depth iteration. We incorporated this insight to improve the robustness of our IDS implementation under the strict 2-second decision limit. In summary, while we consulted ChatGPT for clarification and refinement, all implementations were written independently.
+
+
 \begin{thebibliography}{9}
+\bibitem{ids_russell}
+Russell, Stuart J., and Peter Norvig. 
+\emph{Artificial Intelligence: A Modern Approach.} 
+4th ed., Pearson, 2020, pp. 80-84.
+
+\bibitem{alpha_beta}
+Knuth, Donald E., and Ronald W. Moore. 
+\emph{An Analysis of Alpha-Beta Pruning.} 
+Artificial Intelligence, vol. 6, no. 4, 1975, pp. 293–326.
 
 \bibitem{heuristics_in_othello}
 Vaishnavi Sannidhanam and Muthukaruppan Annamalai, 
